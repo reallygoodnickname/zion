@@ -44,7 +44,7 @@ class Database:
         try:
             # Create URI to make engine creation line shorter
             URI = f"mariadb+mariadbconnector://{user}:{passwd}@{host}/{name}"
-            self.engine = create_engine(URI, echo=True, future=True)
+            self.engine = create_engine(URI, future=True)
             Base.metadata.create_all(self.engine)
 
         # TODO: add exceptions support
