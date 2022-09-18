@@ -1,28 +1,42 @@
-from . import app
-from . import database
+import database
+import click
 import configparser
 import logging
 from flask import (render_template,
                    request,
                    redirect,
-                   url_for)
+                   url_for,
+                   Flask)
 
-# Setting up logging
-logging.basicConfig(format='[%(levelname)s] %(asctime)s %(message)s',
-                    datefmt="%Y-%d-%m %H:%M:%S",
-                    filename='logs/zion.log',
-                    encoding='utf-8')
+app = Flask(__name__)
 
-# TODO: check if config file exists
+CONFIG_PATH = 'zion.ini'
+LOG_PATH = 'logs/zion.log'
+
+
 # Getting configuration from config file
 config = configparser.ConfigParser()
-config.read('zion.ini')
+config.read(CONFIG_PATH)
+
 
 # Getting values from config file
 db_user = config['database']['db_user']
 db_pass = config['database']['db_pass']
 db_host = config['database']['db_host']
 db_name = config['database']['db_name']
+# log_path = config['base']['log_path']
+
+# try:
+#    open(log_path, 'rw').close()
+# except PermissionError:
+#    print("Couldn't open log file, check your permissions!")
+
+# Setting up logging
+logging.basicConfig(format='[%(levelname)s] %(asctime)s %(message)s',
+                    datefmt="%Y-%d-%m %H:%M:%S",
+                    filename=LOG_PATH,
+                    encoding='utf-8')
+
 
 db = database.Database(db_host, db_user, db_pass, db_name)
 
@@ -45,6 +59,8 @@ def login():
     return render_template('login.html')
 
 
-@app.route("/register")
-def register():
-    pass
+# @app.route("/register")
+# def register():
+#     pass
+
+
