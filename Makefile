@@ -17,4 +17,5 @@ tests: clean build
 	@virtualenv $(VENV_PATH) && . $(VENV_PATH)/bin/activate && \
 	coverage run -m unittest discover -vs tests/ && \
 	coverage report && \
-   	coverage html	
+   	coverage html && \
+	bandit -r zion/ 
