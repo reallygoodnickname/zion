@@ -1,0 +1,69 @@
+body {
+    color: #ffffff;
+    width: 40%;
+    margin: 0px auto;
+}
+
+.config-header {
+    background-color: #1A74E2;
+    margin-top: 20px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.config-body {
+    padding-top: 8px;
+    background-color: #1c222b;
+    padding-bottom: 15px;
+}
+
+.config-body hr {
+    width: 80%;
+    margin-left: 20px;
+}
+
+.header {
+    margin-left: 20px;
+    color: grey;
+    font-size: 25px;
+}
+
+.description, .options {
+    margin-left: 20px;
+}
+
+.description a {
+    text-decoration: none;
+    color:
+}
+
+.options td {
+    padding-bottom: 20px;
+    font-weight: bold;
+}
+
+.options input {
+    border-radius: 0px;
+    border: 0px;
+    height: 25px;
+    outline: none;
+}
+
+.buttons {
+    margin-top: 10px;
+    float: right;
+}
+
+.buttons button {
+    color: #ffffff;
+    background-color: #1A74E2;
+    font-size: 16px;
+    border-radius: 0px;
+    border: 0px;
+    padding: 3px 20px;
+    margin-left: 15px;
+}
+
+.buttons button:hover {
+    background-color: #12519e;
+}

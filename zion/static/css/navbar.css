@@ -1,0 +1,38 @@
+.navbar {
+    background-color: #1A74E2;
+    color: #ffffff;
+    margin-top: 15px;
+    margin-right: auto;
+    width: 80%;
+    margin: 15px auto 0px;
+}
+
+.navbar .add_post {
+    color: #00ed00;
+    text-decoration: none;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.navbar .nav_button {
+    padding-left: 10px;
+    padding-right: 10px;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.navbar .home_button {
+    color: #ffffff;
+    padding-left: 25px;
+    padding-right: 25px;
+    text-decoration: none;
+}
+
+.navbar .login_button {
+    color: #ffffff;
+    text-decoration: none;
+    float: right;
+    padding-right: 10px;
+}

@@ -1,0 +1,32 @@
+.login{
+    background-color: #1c2223;
+    border-top: 20px solid #1A74E2;
+    color: white;
+    width: 500px;
+    margin: 200px auto 68px;
+}
+
+.login input[type=text], input[type=email], input[type=password] {
+    outline: none;
+    width: 100%;   
+    margin: 8px 0px 4px 0px;  
+    padding: 12px 20px;   
+    display: inline-block;   
+    box-sizing: border-box; 
+}
+
+.login button {
+    color: #ffffff;
+    transition-duration: 0.4s;
+    background-color: #1A74E2;
+    border: 0px;
+    font-size: 18px;
+    border-radius: 5px;
+    width: 100%;
+    margin: 12px 0 8px;
+    padding: 12px 20px;
+}
+
+.login button:hover {
+    background-color: #251be2;
+}

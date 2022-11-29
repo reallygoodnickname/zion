@@ -1,0 +1,19 @@
+.editor-buttons {
+    width: 80%;
+    margin: 20px auto;
+}
+
+.editor-buttons button {
+    color: #ffffff;
+    background-color: #1A74E2;
+    font-size: 16px;
+    border-radius: 0px;
+    border: 0px;
+    padding: 3px 20px;
+    float: right;
+    margin-left: 20px;
+}
+
+.editor-buttons button:hover {
+    background-color: #12519e;
+}
