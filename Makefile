@@ -11,11 +11,8 @@ build:
 # Destroy virtual environment
 clean:
 	@echo "Cleaning virtual environment..."
-	@rm -rf $(VENV_PATH) htmlcov
+	@rm -rf $(VENV_PATH) htmlcov .coverage
 
-tests: clean build
-	@source $(VENV_PATH)/bin/activate && \
-	coverage run -m unittest discover -vs tests/ && \
-	coverage report && \
-   	coverage html && \
+tests: 
+	@. $(VENV_PATH)/bin/activate && \
 	bandit -r zion/ 
