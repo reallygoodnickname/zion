@@ -1,0 +1,10 @@
+.setting-header {
+    padding: 10px 0px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: left;
+}
+
+.setting-input {
+    padding: 10px 0px;
+    text-align: right;
