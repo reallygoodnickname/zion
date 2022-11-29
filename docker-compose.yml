@@ -1,0 +1,30 @@
+services:
+    db:
+      image: mariadb 
+      restart: always
+      environment:
+        - MYSQL_ROOT_PASSWORD=password
+        - MYSQL_DATABASE=zion
+        - MYSQL_USER=zion
+        - MYSQL_PASSWORD=password
+      healthcheck:
+        test: ["CMD-SHELL", "mysql $$(echo $$MYSQL_DATABASE) -u$$(echo $$MYSQL_USER) -p$$(echo $$MYSQL_PASSWORD) -e 'SELECT 1;' || exit 1"]
+        interval: 2s
+        retries: 60
+      ulimits:
+        memlock: 262144
+
+    zion:
+      build: .
+      ports:
+        - "8080:8080"
+      restart: always
+      depends_on:
+        db:
+          condition: service_healthy
+      environment:
+        ZION_DB_USER: "zion"
+        ZION_DB_PASS: "password"
+        ZION_DB_NAME: "zion"
+        ZION_DB_HOST: db
+
