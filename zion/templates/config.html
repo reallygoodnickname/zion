@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>Zion - configuration</title>
+
+		<link rel="stylesheet" type="text/css" href="/static/css/style.css">
+		<link rel="stylesheet" type="text/css" href="/static/css/config.css">
+    </head>
+    <body>
+        {% with messages = get_flashed_messages() %}
+        {% for message in messages %}
+        <div class="error-block" style="width: 100%">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endwith %}
+        <header class="config-header">Configuration</header>
+        {% if not _configured %}
+        <main class="config-body">
+            <section class="greeting">
+                <span class="header">Greetings!</span>
+                <hr size="1">
+                <p class="description">This is Zion configuration page. After filling all the field you will be able to use Zion CMS</p>
+            </section>
+            <section>
+                <span class="header">Configuration</span>
+                <hr size="1">
+                <p class="description">Most of this settings can be changed in future</p>
+            </section>
+            <section class="options">
+                <form id="options-form">
+                    <table>
+                        <tr>
+                            <td width="200px"><label for="username">Username</label></td>
+                            <td><input maxlength=20 required=yes name="username" type="text"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="password">Password</label></td>
+                            <td><input required=yes name="password" type="password"></td>
+                        </tr>
+                        <tr>
+                            <td><label for="password-repeat">Password (repeat)</label></td>
+                            <td><input required=yes name="password-repeat" type="password"></td>
+                        </tr>
+                        <tr>
+                            <td>Email <small>(optional)</small></td>
+                            <td><input maxlength=256 name="email" type="email"></td>
+                        </tr>
+                    </table>
+                </form>
+            </section>
+            <section class="notes">
+                <p class="description">Email adress is not required but it will be good if you add it.
+                If you don't want to add it now you will be able to do it in future, but keep in mind that
+                you won't be able to recover your password via email</p>
+            </section>
+        </main>
+        <section class="buttons">
+            <button form="options_form" type=reset title="Clear form">Cancel</button>
+            <button form="options-form" formaction="{{ url_for("config.configure") }}" formmethod=post type=submit title="Finish zion configuration">Apply settings</button>
+        </section>
+        {% else %}
+        <main class="config-body">
+            <section class="greeting"> 
+                <span class="header">Configured!</span>
+                <hr size="1">
+                <p class="description">You've successfully configured Zion CMS ! You can now use your credentials to <a href="{{ url_for("index.login") }}">login</a>.</p>
+            </section>
+        </main>
+        {% endif %}
+    </body>
+</html>

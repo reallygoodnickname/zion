@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Registration{% endblock %}
+{% block mail_body %}
+            <section>
+                <h1 style="color: white">Complete registration</h1>
+                <p>Your registration code is:</p>
+                <span style="padding: 5px;background-color: #161b1c;color:red;font-weight: bold">{{ registration_code }}</span>
+                <p>Keep this code secret!<p>
+            </section>
+{% endblock %}

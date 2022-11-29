@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Error warning{% endblock %}
+{% block mail_body %}
+            <section>
+                <h1 style="color: red">Fatal error</h1>
+                <p>Something went completely wrong. Here is traceback</p>
+                {{ error }} 
+            </section>
+{% endblock %}

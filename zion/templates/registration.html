@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %} Zion - login {% endblock %}
+{% block title %} Zion - register {% endblock %}
 {% block css %}
 <link rel="stylesheet" type="text/css" href="/static/css/login.css">
 {% endblock %}
@@ -12,12 +12,17 @@
             </div> 
             {% endfor %}
             {% endwith %}
-            <div style="padding: 10px; padding-top: 0px; margin-top:10px; display: table"> 
+            <div style="padding: 10px; display:table; padding-top: 0px; margin-top:10px"> 
                 <label>Username</label>
                 <input type="text"  placeholder="Username" name="username" required>
                 <label style="margin-top: 12px">Password</label>
                 <input type="password"  placeholder="Password" name="password" required>
-                <a href="{{ url_for("registration.view") }}">Registration</a>
+                <label style="margin-top: 12px">Password <small>(repeat)</small></label>
+                <input type="password"  placeholder="Password" name="rpassword" required>
+                {% if config["REQUIRE_MAIL"] %}
+                <label>Email</label>
+                <input type="email"  placeholder="Email" name="email" required>
+                {% endif %}
                 <button type="submit" formmethod="post">Submit</button>
             </div>
         </form>

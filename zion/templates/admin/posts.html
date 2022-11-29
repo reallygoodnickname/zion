@@ -1,0 +1,32 @@
+{% extends "admin/base.html" %}
+{% block title %}Posts - zion{% endblock %}
+{% block content %}
+    <h2>Posts</h2>
+    <hr>
+    {% if Posts|length > 0 %}
+    [ <a style="color: lime" href="{{ url_for("article.edit") }}">Add</a> ]
+    <table style="text-align:center" width="100%">
+        <tr>
+            <th>Post ID</th>
+            <th>Header</th>
+            <th>Author</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+        {% for Post in Posts %}
+        <tr>
+            <td>{{ Post.id }}</td>
+            <td><a href="{{ url_for("article.view", post_id=Post.id) }}">{{ Post.header }}</a></td>
+            <td><a href="{{ url_for("profile.view", username=Post.author.username) }}">{{ Post.author.username }}</a></td>
+            <td>{{ Post.timestamp }}</td>
+            <td style="text-align: center">
+                [ <a style="color: red" title="Delete" href="{{ url_for("admin_posts.delete", post_id = Post.id) }}">X</a> | 
+                <a style="color: orange" title="Edit" href="{{ url_for("article.edit", post_id = Post.id) }}">E</a> ]
+            </td>
+        </tr>
+        {% endfor %}
+    {% else %}
+    <h1 style="text-align: center">No posts yet, but you can always <a href="{{ url_for("article.edit") }}">add</a> new one!</h1>
+    </table>
+    {% endif %}
+{% endblock %}

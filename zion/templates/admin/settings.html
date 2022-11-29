@@ -1,5 +1,71 @@
 {% extends "admin/base.html" %}
-{% block title %}Settings - zion{% endblock %}
+{% block title %}Admin - settings{% endblock %}
+{% block stylesheet %}
+<link rel="stylesheet" href="/admin/static/css/settings.css">
+{% endblock %}
 {% block content %}
-    <h1>This is settings page!</h1>
+    {% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+    <div class="error-block">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endwith %}
+    <form>
+    <header>
+        <h2>Mail</h2>
+        <hr>
+    </header>
+    <table width="100%">
+        {% for setting in settings %}
+        {% if setting.startswith('SMTP_')%} 
+        <tr>
+            <td class="setting-header"><label for="{{ setting }}">{{ settings[setting][1] }}</label></td>
+            {% if settings[setting][2] == "text" %}
+            <td class="setting-input"><input name="{{ setting }}" type={% if "PASSWORD" in setting %}"password"{% else %}"text"{% endif %} value="{{ settings[setting][0] }}" /></td>
+            {% else %}
+            <td class="setting-input"><input name="{{ setting }}" type="checkbox" {% if settings[setting][0] %}checked{% endif %} /></td>
+            {% endif %}
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </table>
+    <header>
+        <h2>Admin</h2>
+        <hr>
+    </header>
+    <table width="100%">
+        {% for setting in settings %}
+        {% if setting.startswith('ADMIN_')%} 
+        <tr>
+            <td class="setting-header"><label for="{{ setting }}">{{ settings[setting][1] }}</label></td>
+            {% if settings[setting][2] == "text" %}
+            <td class="setting-input"><input name="{{ setting }}" type="text" value="{{ settings[setting][0] }}" /></td>
+            {% else %}
+            <td class="setting-input"><input name="{{ setting }}" type="checkbox" {% if settings[setting][0] %}checked{% endif %} /></td>
+            {% endif %}
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </table>
+    <header>
+        <h2>Misc</h2>
+        <hr>
+    </header>
+    <table width="100%">
+        {% for setting in settings %}
+        {% if not setting.startswith(('ADMIN_','SMTP_')) %} 
+        <tr>
+            <td class="setting-header"><label for="{{ setting }}">{{ settings[setting][1] }}</label></td>
+            {% if settings[setting][2] == "text" %}
+            <td class="setting-input"><input name="{{ setting }}" type="text" value="{{ settings[setting][0] }}" /></td>
+            {% else %}
+            <td class="setting-input"><input name="{{ setting }}" type="checkbox" {% if settings[setting][0] %}checked{% endif %} /></td>
+            {% endif %}
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </table>
+    <button style="margin-bottom: 10px;" formmethod=post formaction={{ url_for("admin_settings.confirm") }}>Save</button>
+    </form>
 {% endblock %}

@@ -1,13 +1,10 @@
-<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-		
-		<!-- Stylesheets -->
-		<link rel="stylesheet" href="static/css/style.css">
-	</head>
-	<body>
+{% extends "base.html" %}
+{% block title %} Zion - posts {% endblock %}        
+{% block css %}
+<link rel="stylesheet" type="text/css" href="/static/css/articles.css">
+<link rel="stylesheet" type="text/css" href="/static/css/navbar.css">
+{% endblock %}
+{% block body %}
         <header>
             {% if ADMIN_MSG is not none %}
             <div class="prompt">
@@ -16,13 +13,62 @@
                 </marquee>
             </div>
             {% endif %}
-            <hr>
+            <div class="navbar">
+                <a href="/" class="home_button"><b>Home</b></a>
+                {% if user and (user.admin or user.author) %}
+                <a class="add_post" href="{{ url_for("article.edit") }}"><b>[ + ]</b></a>
+                {% endif %}
+                {% if user and user.admin %}
+                <a style="color: red; text-decoration: none" href="{{ url_for("admin_posts.posts") }}"><b>[ A ]</b></a>
+                {% endif %}
+                {% if Posts|length > 1 %}
+                <a href="{{ url_for("article.view", post_id = Posts[0].id) }}" class="nav_button">first</a> :
+                <a href="{{ url_for("index.random") }}" class="nav_button">random</a> :
+                <a href="{{ url_for("article.view", post_id = Posts[-1].id) }}" class="nav_button">last</a> 
+                {% endif %}
+                {% if session['username'] %}
+                <a href="{{ url_for("index.logout") }}" class="login_button">[logout]</a>  
+                <a href="{{ url_for("profile.view", username = session['username']) }}" class="login_button">
+                    {{ session['username'] }}
+                </a>  
+                {% else %}
+                <a href="{{ url_for("index.login") }}" class="login_button">login</a>  
+                {% endif %}
+            </div>
         </header>
-        <div class="articles">
-                          
+        <div class="articles" style="height:240px">
+            {% if Posts|length > 0 %}
+            <table>
+                {% for Post in Posts %}
+                <tr>
+                    <td style="width: 70%">
+                        <a href="{{ url_for("article.view", post_id = Post.id) }}">{{ Post.header }}</a>
+                    </td>
+                    <td style="width: 250px">
+                        ({{ Post.timestamp }}) 
+                    </td>
+                    <td style="width: 270px; padding-right: 8px;">
+                        <span>
+                            <a href="{{ url_for("profile.view", username = Post.author.username) }}">
+                                {% if session["username"] != Post.author.username %}
+                                {{ Post.author.username }}
+                                {% else %}
+                                <mark style="background: transparent; color: lime">YOU</mark>
+                                {% endif %}
+                            </a>
+                            {% if (Post.author.username == session["username"]) or user.admin %}
+                            [ <a style="color: red" alt="Delete" href="{{ url_for("article.delete", post_id = Post.id ) }}">X</a> | 
+                            <a style="color: orange" href="{{ url_for("article.edit", post_id = Post.id ) }}">E</a> ]
+                            {% elif user.moderator %}
+                            [ <a style="color: red" alt="Delete" href="{{ url_for("article.delete", post_id = Post.id) }}">X</a> ]
+                            {% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <center>No posts here yet!</center>
+            {% endif %}
         </div>
-        <footer class="footer">
-            <hr>
-        </footer>
-	</body>
-</html>
+{% endblock %}

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    </head>
+    <body>
+        <div style="background-color: #1c2223; color: white; width: 80%">
+            <section name="header" style="text-align: center; background-color: #1A74E2">
+                <h4 style="margin: 0px">{% block title %}{% endblock %}</h4> 
+            </section>
+            <main style="text-align: center; padding: 12px;">
+                {% block mail_body %}
+                {% endblock %}
+            </main>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %} {{ Post.header }} {% endblock %}        
+{% block css %}
+<link rel="stylesheet" type="text/css" href="/static/css/articles.css">
+<link rel="stylesheet" type="text/css" href="/static/css/navbar.css">
+<link rel="stylesheet" type="text/css" href="/static/css/comments.css">
+{% endblock %}
+{% block body %}
+        <header>
+            {% if Post.id is not none %}
+            <div class="navbar">
+                <a href="{{ url_for("index.root_index") }}" class="home_button"><b>Home</b></a>
+                {% if session['username'] %}
+                <a href="{{ url_for("index.logout") }}" class="login_button">[logout]</a>  
+                <a href="{{ url_for("profile.view", username = session['username']) }}" class="login_button">
+                    {{ session['username'] }}
+                </a>  
+                {% else %}
+                <a href="/login" class="login_button">login</a>  
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="navbar text-center">
+                <b>Article preview</b>
+            </div>
+            {% endif %}
+        </header>
+        <div class="articles">
+            <div class="article-header">
+                <h1 class="header">{{ Post.header }}</h1>
+                <h5 class="timestamp">{{ Post.timestamp }} {% if Post.id is not none %}<small style="margin-left:10px"><i>(by <a href="{{ url_for("profile.view", username=Post.author.username) }}">{{ Post.author.username }}</a>)</i></small>{% endif %}</h5>
+            </div> 
+            <div class="article-body">
+                <article class="article-text"> {{ Post.article | safe }} </article>
+            </div>
+        </div>
+        {% if Post.id is not none %}
+        {% if post_nav[0] or post_nav[1] %}
+        <div class="articles-nav">
+            <table style="margin: 0px 20px">
+                <tr>
+                    <!-- Return button -->
+                    {% if post_nav[0] is not false %}
+                    <td style="float: left">
+                        &lt;
+                    </td>
+                    <td style="width: 50%">
+                    <a href="{{ url_for("article.view", post_id = post_nav[0].id) }}" class="prev">{{ post_nav[0].header }}</a>
+                    {% else %}
+                    <td style="width: 50%">
+                    -
+                    {% endif %}
+                    </td>
+                    <!-- Next button -->
+
+                    <td style="width: 50%">
+                    {% if post_nav[1] is not false %}
+                    <a href="{{ url_for("article.view", post_id = post_nav[1].id) }}" class="next">{{ post_nav[1].header }}</a>
+                    </td>
+                    <td style="float: right">
+                        &gt;
+                    {% else %}
+                    -
+                    {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        {% endif %}
+        <div class="comments">
+            {% if Post.comments|length > 0 %}
+            <center class="header">Comments ({{Post.comments|length }})</center>
+            <div class="all-comments">
+                {% for comment in Post.comments %}
+                <table width="100%" {% if comment_id is not none and comment_id == comment.id %} id={{ comment.id }} class="comment-marked" {% endif %} style="padding-left: {{ 50*comment.level }}px; background-color: inherit; border-spacing: 0px;">
+                    <tr>
+                        <td class="comment-header">
+                            <a style="color: #ffffff" href="{{ url_for("profile.view", username = comment.author.username) }}">{{ comment.author.username }}</a>
+                            {% if comment.author.username == Post.author.username %}
+                            <span style="color: purple" title="Author of this article">(author)</span>
+                            {% endif %}
+                            {% if comment.author.admin %}
+                            <span style="color: red" title="Administrator">(admin)</span>
+                            {% endif %}
+                            {% if comment.author.moderator %}
+                            <span style="color: lime" title="Moderator">(mod)</span>
+                            {% endif %}
+                            <small class="timestamp">[ {{ comment.timestamp }} ]</small>
+                            {% if 'username' in session %}
+                            <small style="color: grey">[<a href="{{ url_for("article.reply", comment_id = comment.id ) }}">Reply</a>]</small>
+                            {% endif %}
+                            <small style="color: grey">[<a href="{{ url_for("article.view", post_id = Post.id, comment_id = comment.id) }}">Link</a>]</small>
+                        </td>
+                        <td class="comment-control">
+                            {% if comment.author.username == session["username"] %}
+                            [ <a style="color: red" title="Delete" href="{{ url_for("comment.delete", comment_id = comment.id) }}" >X</a> | 
+                            <a style="color: orange" title="Edit" href="{{ url_for("article.comment_edit", comment_id = comment.id ) }}">E</a> ]
+                            {% elif user and (user.admin  or user.moderator) %}
+                            [ <a style="color: red" alt="Delete" href="{{ url_for("comment.delete", comment_id = comment.id ) }}" >X</a> ]
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="comment-body">
+                            {{ comment.content }}
+                        </td>
+                        <td class="comment-avatar">
+                            {% if comment.author.avatar %}
+                            <a href="{{ url_for("profile.view", username= comment.author.username ) }}">
+                                <img src="{{ url_for('static', filename='images/'+ comment.author.avatar) }}">
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        <div class="comment-entry">
+            {% if 'username' in session %}
+            <span class="header">
+                Comment
+                {% if edit %}
+                (editing  <a style="text-decoration: none" href="#{{ comment_id }}">#{{ comment_id }}</a> )
+                {% elif reply %}
+                (reply to <a style="text-decoration: none" href="#{{ comment_id }}">#{{ comment_id }}</a>)
+                {% endif %}
+            </span>
+            <form>
+                <textarea spellcheck="false" rows=3 minlength=5 maxlength=255 name="comment" required="yes"></textarea>
+                {% if edit %}
+                <button formmethod=post type=submit target=_self formaction="{{ url_for("comment.edit", comment_id = comment_id ) }}">Save</button>
+                {% else %}
+                <button formmethod=post type=submit target=_self formaction="{{ url_for("comment.add", post_id = Post.id, parent_id = comment_id ) }}">Comment</button>
+                {% endif %}
+                <button type=reset>Cancel</button>
+            </form>
+            {% else %}
+            <span class="header"><b>Please <a style="color: blue" href="{{ url_for("index.login") }}">login</a> to be able to comment!</b></span>
+            {% endif %}
+        </div>
+        {% endif %}
+{% endblock %}

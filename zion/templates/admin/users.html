@@ -1,0 +1,44 @@
+{% extends "admin/base.html" %}
+{% block title %}Users - zion{% endblock %}
+{% block content %}
+    {% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+    <div class="error-block">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endwith %}
+    <h2>Users</h2>
+    <hr>
+    {% if Users|length > 0 %}
+    <table width="100%" style="text-align: center">
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Author</th>
+            <th>Moderator</th>
+            <th>Admin</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+        {% for User in Users %}
+        <tr>
+            <td>{{ User.id }}</td>
+            <td style="text-align: left"><a href="{{ url_for("profile.view", username = User.username ) }}">{{ User.username }}</a></td>
+            <td>{{ User.email }}</td>
+            <td><a href="{{ url_for("admin_users.alter", user_id = User.id, field = "author") }}" style="text-decoration: none; color: {% if User.author %}lime{% else %}red{% endif %}">{{ User.author }}</a></td>
+            <td><a href="{{ url_for("admin_users.alter", user_id = User.id, field = "moderator") }}" style="text-decoration: none; color: {% if User.moderator %}lime{% else %}red{% endif %}">{{ User.moderator }}</a></td>
+            <td><a href="{{ url_for("admin_users.alter", user_id = User.id, field = "admin") }}" style="text-decoration: none; color: {% if User.admin %}lime{% else %}red{% endif %}">{{ User.admin }}</a></td>
+            <td>{{ User.timestamp }}</td>
+            <td>
+                [ <a style="color: red" href="{{ url_for("admin_users.delete", user_id = User.id) }}">X</a> |
+                <a style="color: orange" href="{{ url_for("admin_users.edit", username = User.username) }}">E</a> ]</td> 
+        </tr>
+        {% endfor %}
+        [ <a style="color:lime" href="{{ url_for("admin_users.add") }}">Add</a> ]
+    {% else %}
+    <h1 style="text-align: center">No users!</h1>
+    </table>
+    {% endif %}
+{% endblock %}

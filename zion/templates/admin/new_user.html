@@ -1,0 +1,50 @@
+{% extends "admin/base.html" %}
+{% block title %}Add user{% endblock %}
+{% block content %}
+    {% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+    <div class="error-block">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endwith %}
+    <section>
+        {% if user %}
+        <h2>Update user info</h2>
+        {% else %}
+        <h2>Add new user</h2>
+        {% endif %}
+        <hr style="margin-bottom: 20px">
+        <form>
+            <table width="80%">
+                <tr>
+                    <td><label for="username">Username</label></td>
+                    <td><input id="username" style="margin: 5px 0px" name="username" {% if user %}value="{{ user.username }}"{% endif %}></td>
+                </tr>
+                {% if not user %}
+                <tr>
+                    <td><label for="password">Password</label></td>
+                    <td><input id="password" style="margin: 5px 0px" type="password" name="password"></td>
+                </tr>
+                <tr>
+                    <td><label>Password <small>(repeat)</small></label></td>
+                    <td><input id="password" style="margin: 5px 0px" type="password" name="rpassword"></td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td><label>Email <small>(not required)</small></label></td>
+                    <td><input name="email" style="margin: 5px 0px" {% if user %}value="{{ user.email }}"{% endif %}></td>
+                </tr>
+            </table>
+            <section class="buttons" width="80%" style="padding: 0px">
+                <button type="reset" class="float:right">Clear</button>
+                {% if user %}
+                <button formmethod="post" class="float:right">Update</button>
+                {% else %}
+                <button formmethod="post" class="float:right">Add</button>
+                {% endif %}
+            <section>
+        </form>
+    </section>
+
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %} Editor {% endblock %}        
+{% block css %}
+<link rel="stylesheet" type="text/css" href="/static/css/articles.css">
+<link rel="stylesheet" type="text/css" href="/static/css/navbar.css">
+<link rel="stylesheet" type="text/css" href="/static/css/editor.css">
+{% endblock %}
+{% block body %}
+        <header>
+            <div class="navbar text-center" >
+                <b>Article editor</b>
+            </div>
+        </header>
+        <form>
+        <div class="articles">
+            <div class="article-header">
+                <input value="{% if not Post %}Article header{% else %}{{ Post.header }}{% endif %}" minlength="40" maxlength=120 size=70 required=yes name=header>
+                <h5 class=timestamp>{% if not Post %}{{ timestamp }}{% else %}{{ Post.timestamp }}{% endif %}</h5>
+            </div> 
+            <div class="article-body">
+                <article>
+                    <textarea spellcheck="false" rows=30 name=body class="article-text" minlength=1000 maxlength=10000>{% if not Post %}Text goes here{% else %}{{ Post.article }}{% endif %}</textarea>
+                </article>
+            </div>
+        </div>
+        <div class="editor-buttons">
+            <button type=submit formmethod=post formaction="{% if not Post %}{{ url_for("article.add") }}{% else %}{{ url_for("article.update", post_id = Post.id ) }}{% endif %}">Submit</button>
+            <button type=submit formtarget=_blank formaction="{{ url_for("article.preview") }}" formmethod=post>Preview</button>
+            <button type=reset >Clear</button>
+        </div>
+        </form>
+{% endblock %}

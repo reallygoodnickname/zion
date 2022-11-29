@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %} Profile : {{ profile.username }} {% endblock %}
+{% block css %}
+<link rel="stylesheet" type="text/css" href="/static/css/profiles.css">
+{% endblock %}
+{% block body %}
+    {% with messages = get_flashed_messages() %}
+    {% if messages|length > 0%}
+    {% for message in messages %}
+    <div class="error-block" style="width: 100%">
+            {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <div class="profile-bio">
+        <header class="profile-header">Profile - {{ profile.username }}</header>
+        <main class="profile-body">
+            <section class="profile-info">
+                {% set logged_in = (profile.username == session['username']) %}
+                {% if logged_in %}
+                <form enctype="multipart/form-data" >
+                {% endif %}
+                <table style="padding-bottom: 10px; width: 100%">
+                    <tr>
+                        <td class="profile-label">username:</td>
+                        <td>{% if logged_in %}<input class="profile-input" name="username" value="{{ profile.username }}">{% else %}{{ profile.username }}{% endif %}</td>
+                        {%  if profile.avatar %}
+                        <td rowspan=2><img style="width: 60px; height: 60px" src="{{ url_for('static', filename='images/' + profile.avatar) }}"></td>
+                        {% endif %}
+                    </tr>
+                    <tr>
+                        <td class="profile-label">created:</td>
+                        <td>{{ profile.timestamp }}</td>
+                    </tr>
+                    {% if logged_in %}
+                    <tr>
+                        <td class="profile-label">old password:</td>
+                        <td><input class="profile-input" type="password" style="border-bottom: 1px solid grey" name="old-password"></td>
+                    </tr>
+                        <td class="profile-label">new password:</td>
+                        <td><input class="profile-input" type="password" style="border-bottom: 1px solid grey" name="new-password"></td>
+                    <tr>
+                        <td class="profile-label">avatar:</td>
+                        <td><input style="color: transparent" accept="image/jpeg, image/png" type="file" name="avatar" alt="Upload avatar image"></td>
+                    </tr>
+                    <tr>
+                        <td><a href="{{ url_for("profile.delete") }}">Delete account</a></td>
+                    </tr>
+                    {% endif %}
+                </table>
+                {% if logged_in %}
+                <div class="profile-buttons">
+                    <button type="submit" formmethod="post" formaction="{{ url_for("profile.update") }}">Update</button>
+                    <button type="reset">Cancel</button>
+                </div>
+                {% endif %}
+                {% if logged_in %}
+                </form>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+    <div class="profile-comments">
+        <header class="profile-header">
+            Comments ({{ profile.comments|length }})
+        </header>
+        <main class="profile-body">
+            <section class="profile-info">
+                {% if profile.comments|length > 0 %}
+                <table style="font-size: 12px">
+                    {% for comment in profile.comments %}
+                    <tr>
+                        <td class="comment-timestamp">{{ comment.timestamp }}</td>
+                        <td class="comment-link"><a target=_blank href="{{ url_for("article.view", post_id = comment.post.id, comment_id = comment.id ) }}">{{ comment.post.header }}</a></td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+                No comments!
+                {% endif %}
+            </section>
+        </main>
+    </div>
+    <div class="profile-articles">
+        <header class="profile-header">Articles ({{ profile.posts|length }})</header>
+        <main class="profile-body">
+            <section class="profile-info">
+                {% if profile.posts|length > 0 %}
+                <table style="font-size: 12px">
+                    {% for article in profile.posts %}
+                    <tr>
+                        <td class="comment-timestamp">{{ article.timestamp }}</td>
+                        <td class="comment-link"><a href="{{ url_for("article.view", post_id = article.id ) }}">{{ article.header }}</a></td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+                No articles posted!
+                {% endif %}
+            </section>
+        </main>
+    </div>
+{% endblock %}
