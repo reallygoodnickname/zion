@@ -1,53 +1,54 @@
-import database
-import configparser
-import logging
+from . import app as app
+from .errors import errors
 
-from flask import Flask
+from sqlalchemy.orm import Session, close_all_sessions
 
-from admin.index import admin_index
-from admin.security import admin_security
-from admin.settings import admin_settings
+from .admin.posts import admin_posts
+from .admin.users import admin_users
+from .admin.settings import admin_settings
 
-from index import index
-from login import login
-from logout import logout
+from .views.index import index
+from .views.comment import comment
+from .views.article import article
+from .views.profile import profile
+from .views.registration import registration
 
-CONFIG_PATH = 'zion.ini'
-LOG_PATH = 'logs/zion.log'
-
-# Setting up logging
-logging.basicConfig(format='[%(levelname)s] %(asctime)s %(message)s',
-                    datefmt="%Y-%d-%m %H:%M:%S",
-                    filename=LOG_PATH,
-                    encoding='utf-8',
-                    level=logging.WARNING)
-
-app = Flask(__name__)
-
-# Adding some blueprints
-app.register_blueprint(admin_index)
-app.register_blueprint(admin_security)
+# Register all brueprints
+app.register_blueprint(admin_posts)
+app.register_blueprint(admin_users)
 app.register_blueprint(admin_settings)
 
 app.register_blueprint(index)
-app.register_blueprint(login)
-app.register_blueprint(logout)
+app.register_blueprint(errors)
+app.register_blueprint(profile)
+app.register_blueprint(article)
+app.register_blueprint(registration)
+app.register_blueprint(comment)
 
-# Application secret key. Change it to something completely secret!
-app.secret_key = b'dev'
 
-# Getting configuration from config file
-config = configparser.ConfigParser()
-config.read(CONFIG_PATH)
+@app.before_request
+def before_request():
+    # Create new session for every new request
+    app.config["DATABASE"].session = Session(app.config["DATABASE"].engine)
 
-# Getting values from config file
-db_user = config['database']['db_user']
-db_pass = config['database']['db_pass']
-db_host = config['database']['db_host']
-db_name = config['database']['db_name']
-# log_path = config['base']['log_path']
 
-app.config["DATABASE"] = database.Database(db_host, db_user, db_pass, db_name)
-app.config["ADMIN_MSG"] = None
+@app.after_request
+def after_request(response):
+    # Content security policy
+    _csp = "default-src 'self';" + \
+        "script-src 'none';" + \
+        "style-src 'unsafe-inline' 'self' fonts.googleapis.com;" + \
+        "img-src *;" + \
+        "font-src fonts.gstatic.com;"
 
-app.run(debug=True)
+    # Set some security headers
+    response.headers["X-Frame-Options"] = "deny"
+    response.headers["Content-Security-Policy"] = _csp
+
+    return response
+
+
+@app.teardown_request
+def teardown_request(exception):
+    # Close all sessions after request is finished
+    close_all_sessions()
