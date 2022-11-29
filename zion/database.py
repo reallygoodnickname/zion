@@ -1,31 +1,40 @@
 from sqlalchemy.orm import (Session,
+                            relationship,
                             declarative_base)
+
+import logging
+
 import sqlalchemy.exc
 from sqlalchemy import (create_engine,
+                        exists,
+                        update,
+                        Boolean,
+                        desc,
+                        inspect,
                         Column,
                         Integer,
                         String,
                         TIMESTAMP,
-                        select,
-                        or_,
-                        update,
-                        func,
-                        text)
+                        ForeignKey,
+                        func)
+
 from sys import exit
-import logging
-import bcrypt
+
+from typing import Any, List, NewType
 
 # Used to create table
 Base = declarative_base()
 
+# Defining some common types
+AttributeType = NewType(
+    "AttributeType", sqlalchemy.orm.attributes.InstrumentedAttribute)
+DeclarativeMetaType = NewType(
+    "DeclarativeMetaType", sqlalchemy.orm.decl_api.DeclarativeMeta)
+
 
 class Database:
 
-    def __init__(self, host,  user, passwd, name):
-        # Getting logger from main file
-        self.__logger = logging.getLogger(__name__)
-
-        func.binary = str()
+    def __init__(self, host: str,  user: str, passwd: str, name: str) -> None:
 
         self.host = host
         self.user = user
@@ -33,161 +42,185 @@ class Database:
         self.name = name
 
         try:
-            URI = f"mariadb+mariadbconnector://{user}:{passwd}@{host}/{name}"
+            URI = f"mysql+mysqldb://{user}:{passwd}@{host}/{name}"
 
             self.engine = create_engine(URI, future=True)
+            self.session = Session(self.engine)
+
+            # Check if table "settings" exists
+            self.configured = inspect(self.engine).has_table("settings")
+
+            # Create all tables, even if they don't exist
             Base.metadata.create_all(self.engine)
 
         except sqlalchemy.exc.OperationalError:
-            self.__logger.critical("Failed to connect to database!")
+            logging.critical("Failed to connect to database!")
             exit(1)
 
-    # Function wrapper to start and close sessions correctly
-    def session_action(function):
-        def inner(self, *args, **kwargs):
-            # Making it work with sqlite
-            # TODO: possibly fix this workaround
-            if self.engine.name == "sqlite":
-                func.binary = str
+    # Get all objects from database
+    def _get_all_from_db(self, obj: Any) -> List:
+        return self.session.query(obj).all()
 
-            # Creating engine and running function
-            self.session = Session(self.engine)
-            result = function(self, *args, **kwargs)
+    # Get literally anything from database
+    def _get_from_db(self, param: AttributeType, target: str) -> Any:
+        q = self.session.query(param.class_).where(
+            param == func.binary(target)).first()
 
-            # Closing session and returning result
-            self.session.close()
-            return result
-        return inner
+        return q if q is not None else False
+
+    # Check if object actually exists in table
+    def _validate_object(self, obj: Any) -> bool:
+        if obj is False:
+            return False
+
+        # Get object class
+        obj_class = obj.__mapper__.class_
+
+        # Return session result
+        return self.session.query(self.session.query(
+            obj.id).filter(obj_class.id == obj.id).exists()).scalar()
+
+    # Delete literally anything from database
+    def _del_from_db(self, obj: Any) -> bool:
+        # Check if object is valid
+        if not self._validate_object(obj):
+            return False
+
+        # Delete from table and commit changes
+        self.session.delete(obj)
+        self.session.commit()
+
+        return True
+
+    # Add literally anything to database
+    def _add_to_db(self, obj: Any) -> bool:
+        # Check if object is valid
+        if self._validate_object(obj):
+            return False
+
+        # Add to table and commit changes
+        self.session.add(obj)
+        self.session.commit()
+
+        return True
+
+    # Alter literally anything in database
+    def _alt_in_db(self, param_class: DeclarativeMetaType,
+                   values: tuple[str, str],  _id: int) -> bool:
+        if not self._exists_in_table(param_class.id, _id):
+            return False
+
+        _primary_key = param_class.id
+
+        self.session.execute(update(param_class).
+                             values(values).
+                             where(_primary_key == _id))
+        self.session.commit()
+
+        return True
 
     # Check if there is an entry in database with specifide value
-    @session_action
-    def exists_in_table(self, column, value):
-        statement = select(column).where(column == func.binary(value))
-        return self.session.scalar(statement) is not None
+    def _exists_in_table(self, column: AttributeType, value: str) -> bool:
+        _res = self.session.query(exists().where(
+            column == func.binary(value))).scalar()
+        return _res
 
-    # Add new user to database
-    @session_action
-    def add_user(self, username, password):
-        # check if username is already taken
-        if (self.exists_in_table(User.username, username)):
-            return False
+    # Get item that goes before specified id
+    def _get_previous(self, param_class: DeclarativeMetaType, _id: int) -> Any:
+        _res = (self.session.query(param_class).
+                where(param_class.id < _id).
+                order_by(desc(param_class.id)).
+                limit(1).first())
 
-        # Hashing password
-        password = bcrypt.hashpw(password.encode('UTF-8'), bcrypt.gensalt())
-        password = password.decode('UTF-8')
+        return False if _res is None else _res
 
-        user = User(username=username, password=password)
+    # Get item that goes after specified id
+    def _get_next(self, param_class: DeclarativeMetaType, _id: int) -> Any:
+        _res = self.session.query(param_class).where(
+            param_class.id > _id).limit(1).first()
 
-        self.session.add(user)
-        self.session.commit()
-        return True
-
-    # Delete user from database
-    @session_action
-    def del_user(self, user):
-        # Check if user is in database
-        if not self.exists_in_table(User.username, user.username):
-            return False
-
-        self.session.delete(user)
-        self.session.commit()
-        return True
-
-    # Get user by id or by username
-    @session_action
-    def get_user(self, user_id=None, username=None):
-        # Check if either user_id or username are passed
-        if (user_id is None and username is None):
-            return False
-
-        statement = select(User).where(
-            or_(User.id == user_id, User.username == func.binary(username)))
-
-        # Check if anything is found. Return false if user is not found
-        result = self.session.scalar(statement)
-        if result is None:
-            return False
-
-        return result
-
-    # Change user password
-    @session_action
-    def change_password(self, user, password):
-        # Check if exists in table
-        if not self.exists_in_table(User.id, user.id):
-            return False
-
-        # Hashing passwoord and adding it to statement
-        password = bcrypt.hashpw(password.encode('UTF-8'), bcrypt.gensalt())
-        statement = update(User).values(
-            password=password.decode('UTF-8')).where(User.id == user.id)
-
-        self.session.execute(statement)
-        self.session.commit()
-
-        return True
-
-    # Check user credentials
-    @session_action
-    def validate_user(self, username, password):
-        statement = select(User.password).where(
-            User.username == func.binary(username))
-
-        # Getting password and password hash
-        hashed = self.session.scalar(statement)
-
-        # Check if we could get password from database
-        if hashed is None:
-            return False
-
-        # Encoding passwords
-        password = password.encode('UTF-8')
-        hashed = hashed.encode('UTF-8')
-
-        # Checking password hash
-        return bcrypt.checkpw(password, hashed)
-
-
-class Restricted(Base):
-    __tablename__ = "restricted"
-
-    id = Column(Integer, primary_key=True, nullable=False)
-    ip = Column(String(16), nullable=False)
-    reason = Column(String(255))
-    timestamp = Column(TIMESTAMP, default=text(
-        "CURRENT_TIMESTAMP"), nullable=False)
-    expire = Column(TIMESTAMP, nullable=False)
-
-    def __repr__(self):
-        return "<Banned(id='%s',ip='%s',reason='%s',timestamp='%s')>" % (
-            self.id, self.ip, self.reason, self.timestamp)
+        return False if _res is None else _res
 
 
 class Post(Base):
     __tablename__ = "posts"
 
-    post_id = Column(Integer, primary_key=True, nullable=False)
-    header = Column(String(255), nullable=False)
-    article = Column(String(2048), nullable=False)
-    author = Column(Integer, nullable=False)
-    timestamp = Column(TIMESTAMP, default=text(
-        "CURRENT_TIMESTAMP"), nullable=False)
+    id = Column(Integer, primary_key=True, nullable=False)
 
-    def __repr__(self):
-        return "<Post(post_id='%s',header='%s',article='%s',author='%s',timestamp='%s')>" % (
-            self.post_id, self.header, self.article, self.author, self.timestamp)
+    # Postheader and body itself
+    header = Column(String(120), nullable=False)
+    article = Column(String(10000), nullable=False)
+
+    # Post author's id
+    author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Post creation date
+    timestamp = Column(TIMESTAMP, server_default=func.now())
+
+    # Relationship, access all comments and post author
+    comments = relationship("Comment", cascade="all,delete", lazy="joined")
+    author = relationship("User", back_populates="posts", lazy="joined")
+
+
+class Comment(Base):
+    __tablename__ = "comments"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
+    author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    parent_id = Column(Integer, ForeignKey("comments.id"), nullable=True)
+
+    # Comment content
+    content = Column(String(255), nullable=False)
+
+    # Comment level, defines indentation that will be used when displaying
+    level = Column(Integer, nullable=False, default=0)
+
+    # Comment creation timestamp
+    timestamp = Column(TIMESTAMP, server_default=func.now())
+
+    # Parent comment and child comments
+    parent = relationship("Comment", remote_side=[id], lazy="joined")
+    child = relationship("Comment", cascade="all,delete",
+                         back_populates="parent", lazy="joined")
+
+    # Author of the comment and post that this comment belongs to
+    author = relationship("User", back_populates="comments", lazy="joined")
+    post = relationship("Post", back_populates="comments", lazy="joined")
 
 
 class User(Base):
     __tablename__ = "users"
 
+    # Some default creds
     id = Column(Integer, primary_key=True, nullable=False)
     username = Column(String(20), nullable=False)
     password = Column(String(64), nullable=False)
-    email = Column(String(256))
-    timestamp = Column(TIMESTAMP, default=text(
-        "CURRENT_TIMESTAMP"), nullable=False)
+    email = Column(String(256), nullable=True)
 
-    def __repr__(self):
-        return "<User(id='%s',username='%s',password='%s',email='%s',timestamp='%s')>" % (
-            self.id, self.username, self.password, self.email, self.timestamp)
+    # User privileges
+    author = Column(Boolean, unique=False, default=False)
+    moderator = Column(Boolean, unique=False, default=False)
+    admin = Column(Boolean, unique=False, default=False)
+
+    # User avatar filename
+    avatar = Column(String(20), nullable=True)
+
+    # User creation timestamp
+    timestamp = Column(TIMESTAMP, server_default=func.now())
+
+    # Replationships
+    posts = relationship("Post", back_populates="author",
+                         cascade="all,delete", lazy="joined")
+    comments = relationship("Comment", back_populates="author",
+                            cascade="all,delete", lazy="joined")
+
+
+class Setting(Base):
+    __tablename__ = "settings"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    setting_name = Column(String(60), nullable=False)
+    setting_value = Column(String(255), nullable=True)
+    setting_desc = Column(String(255), nullable=False)
+    setting_type = Column(String(20), nullable=False)
